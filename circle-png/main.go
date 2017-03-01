@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image/png"
+	"math"
 	"os"
 
 	"github.com/adamryman/circle"
@@ -27,8 +28,13 @@ func main() {
 	defer f.Close()
 
 	c := circle.Simple(*x, *y, *r)
+	s := circle.Sector{
+		Circle: *c,
+		Θ1:     0,
+		Θ2:     math.Pi + math.Pi/3,
+	}
 
-	err = png.Encode(f, c)
+	err = png.Encode(f, &s)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
