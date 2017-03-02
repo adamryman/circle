@@ -1,10 +1,10 @@
 package circle
 
 import (
+	//. "github.com/y0ssar1an/q"
 	"image"
 	"image/color"
 	"math"
-	//. "github.com/y0ssar1an/q"
 )
 
 func Simple(x, y, radius int) *Circle {
@@ -45,29 +45,81 @@ func (c *Circle) At(x, y int) color.Color {
 // Sector coming soon
 type Sector struct {
 	Circle
-	Θ1 float64
-	Θ2 float64
+	Θ1    float64
+	Θ2    float64
+	Color color.Color
 }
 
 func (s *Sector) At(x, y int) color.Color {
 	// Center around origin
 	xx, yy, rr := float64(x-s.Point.X), -float64(y-s.Point.Y), float64(s.Radius)
-	if crr := xx*xx + yy*yy; crr < rr*rr {
+	if xx*xx+yy*yy < rr*rr {
 		theta := math.Atan2(yy, xx)
 		if theta < 0 {
 			theta = theta + 2*math.Pi
 		}
 		if theta >= s.Θ1 && theta < s.Θ2 {
-			return Red{}
-
+			return s.Color
 		}
-		return color.Black
 	}
-	return color.White
+	return color.Alpha{255}
+}
+
+type SectorCircle struct {
+	Circle
+	Sectors []Sector
+}
+
+func (s *SectorCircle) At(x, y int) color.Color {
+	// Center around origin
+	xx, yy, rr := float64(x-s.Point.X), -float64(y-s.Point.Y), float64(s.Radius)
+	if xx*xx+yy*yy < rr*rr {
+		theta := math.Atan2(yy, xx)
+		if theta < 0 {
+			theta = theta + 2*math.Pi
+		}
+		distance := theta / (2 * math.Pi)
+		sectorIndex := int(distance * float64(len(s.Sectors)))
+		return s.Sectors[sectorIndex].Color
+	}
+	return color.Alpha{255}
+}
+
+type colorCircle struct {
+	Circle
+	Colors []color.Color
+}
+
+func (c *colorCircle) At(x, y int) color.Color {
+	// Center around origin
+	xx, yy, rr := float64(x-c.Point.X), -float64(y-c.Point.Y), float64(c.Radius)
+	if xx*xx+yy*yy < rr*rr {
+		theta := math.Atan2(yy, xx)
+		if theta < 0 {
+			theta = theta + 2*math.Pi
+		}
+		distance := theta / (2 * math.Pi)
+		colorIndex := int(distance * float64(len(c.Colors)))
+		return c.Colors[colorIndex]
+	}
+	return color.Alpha{255}
+}
+
+func ColorCircle(radius int, colors ...color.Color) image.Image {
+	cc := colorCircle{
+		Circle: Circle{
+			Radius: radius,
+			Point:  image.Pt(0, 0),
+		},
+	}
+	for _, c := range colors {
+		cc.Colors = append(cc.Colors, c)
+	}
+	return &cc
 }
 
 type Red struct{}
 
 func (_ Red) RGBA() (r, g, b, a uint32) {
-	return 0xffff, 0, 0, 0xffff
+	return 0xff, 0, 0, 0xff
 }
